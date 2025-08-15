@@ -1,27 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
   const header = document.getElementById('titleHeader');
-  let asc = true;
-  let hideOwned = false;
+
+  state.sortAsc = true;
+  state.hideOwned = false;
+
   const hideBtn = document.getElementById('toggleHideOwned');
-  hideBtn.addEventListener('click', () => {
-    hideOwned = !hideOwned;
-    hideBtn.textContent = hideOwned ? 'Show Owned' : 'Hide Owned';
-    state.filtered = state.all.filter(item => {
-      const owned = !!state.ownedMap.get(normalizeTitle(item.Title));
-      return hideOwned ? !owned : true;
+  if (hideBtn) {
+    hideBtn.addEventListener('click', () => {
+      state.hideOwned = !state.hideOwned;
+      hideBtn.textContent = state.hideOwned ? 'Show Owned' : 'Hide Owned';
+      applyFilters();
     });
-    renderTable();
-  });
-  header.addEventListener('click', () => {
-    asc = !asc;
-    state.filtered.sort((a, b) => {
-      const ta = (a.Title || '').toLowerCase();
-      const tb = (b.Title || '').toLowerCase();
-      return asc ? ta.localeCompare(tb) : tb.localeCompare(ta);
+  }
+
+  if (header) {
+    header.addEventListener('click', () => {
+      state.sortAsc = !state.sortAsc;
+      header.textContent = state.sortAsc ? 'Title ▲' : 'Title ▼';
+      applyFilters();
     });
-    renderTable();
-    header.textContent = asc ? 'Title ▲' : 'Title ▼';
-  });
+  }
 });
 
 const db = (() => {
@@ -125,6 +123,8 @@ const state = {
   filtered: [],
   ownedMap: new Map(),
   notesMap: new Map(),
+  sortAsc: true,
+  hideOwned: false,
 };
 
 function normalizeTitle(t) {
@@ -148,13 +148,22 @@ async function loadLocalState() {
 }
 
 function applyFilters() {
-  const q = document.getElementById('search').value.toLowerCase().trim();
+  const q = document.getElementById('search')?.value.toLowerCase().trim() || '';
+  const hide = !!state.hideOwned;
   state.filtered = state.all.filter(item => {
     const matchesQ =
       !q ||
       (item.Title || '').toLowerCase().includes(q) ||
       (state.notesMap.get(normalizeTitle(item.Title)) || '').toLowerCase().includes(q);
-    return matchesQ;
+    if (!matchesQ) return false;
+    const owned = !!state.ownedMap.get(normalizeTitle(item.Title));
+    if (hide && owned) return false;
+    return true;
+  });
+  state.filtered.sort((a, b) => {
+    const ta = (a.Title || '').toLowerCase();
+    const tb = (b.Title || '').toLowerCase();
+    return state.sortAsc ? ta.localeCompare(tb) : tb.localeCompare(ta);
   });
   renderTable();
 }
@@ -181,6 +190,7 @@ function renderTable() {
     checkbox.addEventListener('change', async () => {
       await db.set('owned:' + key, checkbox.checked);
       state.ownedMap.set(key, checkbox.checked);
+      applyFilters();
     });
     ownedTD.appendChild(checkbox);
     tr.appendChild(ownedTD);
@@ -249,6 +259,38 @@ function exportOwnedCSV() {
   URL.revokeObjectURL(url);
 }
 
+async function importOwnedCSVFile(file) {
+  const text = await file.text();
+  const rows = parseCSV(text);
+  if (!rows.length) return alert('No rows found in CSV.');
+
+  const headerLine = text.split(/\r?\n/)[0];
+  const headers = headerLine.split(',').map(h => h.replace(/(^\"|\"$)/g,'').trim().toLowerCase());
+  const titleKey = headers.find(h => h === 'title');
+  if (!titleKey) return alert('CSV must include a Title column.');
+  const notesKey = headers.find(h => h === 'notes');
+
+  let ownedCount = 0;
+  for (const r of rows) {
+    const title = (r.Title || r.title || '').trim();
+    if (!title) continue;
+    const key = normalizeTitle(title);
+
+    await db.set('owned:' + key, true);
+    state.ownedMap.set(key, true);
+    ownedCount++;
+
+    const notes = (r.Notes || r.notes || '').trim();
+    if (notesKey && notes) {
+      await db.set('notes:' + key, notes);
+      state.notesMap.set(key, notes);
+    }
+  }
+
+  applyFilters();
+  alert(`Imported ${ownedCount} owned items${notesKey ? ' (with notes where present)' : ''}.`);
+}
+
 async function main() {
   const data = await fetchCSV('dune_unique_schematics.csv');
   data.sort((a,b) => (a.Title || '').localeCompare(b.Title || ''));
@@ -257,8 +299,26 @@ async function main() {
   await loadLocalState();
   applyFilters();
 
+  const header = document.getElementById('titleHeader');
+  if (header) header.textContent = state.sortAsc ? 'Title ▲' : 'Title ▼';
+  const hideBtn = document.getElementById('toggleHideOwned');
+  if (hideBtn) hideBtn.textContent = state.hideOwned ? 'Show Owned' : 'Hide Owned';
+
   document.getElementById('search').addEventListener('input', applyFilters);
   document.getElementById('exportOwned').addEventListener('click', exportOwnedCSV);
+
+  const importInput = document.getElementById('importOwned');
+  const importBtn = document.getElementById('importOwnedBtn');
+  importBtn.addEventListener('click', () => importInput.click());
+  importInput.addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      await importOwnedCSVFile(file);
+    } finally {
+      e.target.value = '';
+    }
+  });
 }
 
 main().catch(err => {

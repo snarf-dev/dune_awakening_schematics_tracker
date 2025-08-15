@@ -10,6 +10,7 @@ Built with plain HTML/JS and deployed via GitHub Pages.
 - Search across titles and notes
 - Sort schematics by Title
 - Hide/show owned schematics
+- Download/Upload your data
 - Works fully client-side, state saved in your browser
 
 ## Deployment
