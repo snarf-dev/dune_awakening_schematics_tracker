@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lora:wght@400;600&display=swap');
+
+:root {
+  --bg: #0f1216;            /* deep night */
+  --bg-elev: #131820;       /* elevated panels */
+  --muted: #8f98a3;         /* subdued text */
+  --text: #e7e2d9;          /* primary text (sand-tinted) */
+  --accent: #d9a55b;        /* spice/metallic gold */
+  --accent-strong: #e9b86e; /* brighter gold */
+  --border: #26303a;        /* panel borders */
+  --hover: #18222d;         /* row hover */
+  --focus: #2a3a47;         /* input focus ring */
+  --danger: #c0563d;        /* warm warning */
+
+  --radius: 10px;
+  --radius-sm: 8px;
+  --shadow: 0 6px 24px rgba(0,0,0,.35);
+  --shadow-sm: 0 2px 10px rgba(0,0,0,.25);
+}
+
+/* Typography */
+html, body { height: 100%; }
+body {
+  margin: 0;
+  color: var(--text);
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(217,165,91,.15), transparent 60%),
+              radial-gradient(1000px 500px at 90% -20%, rgba(59,85,109,.18), transparent 55%),
+              var(--bg);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.45;
+}
+
+h1, h2, h3 { font-family: Lora, Georgia, 'Times New Roman', serif; }
+h1 { margin: 0 0 .5rem; font-size: 1.35rem; letter-spacing: .4px; color: var(--accent-strong); }
+
+/* Header */
+header {
+  position: sticky; top: 0; z-index: 5;
+  background: rgba(19,24,32,.85);
+  backdrop-filter: blur(6px);
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  /* background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Atreides_Falcon.svg/200px-Atreides_Falcon.svg.png');
+  background-repeat: no-repeat;
+  background-position: right 20px center;
+  background-size: 64px auto;
+  opacity: 0.97; */
+}
+
+.controls { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+.controls input[type="search"], .controls select, .controls button {
+  padding: .6rem .7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  color: var(--text);
+  outline: none;
+}
+.controls input[type="search"]:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(42,58,71,.35); }
+.controls button { cursor: pointer; transition: transform .06s ease, background .2s ease, border-color .2s ease; }
+.controls button:hover { border-color: var(--accent); }
+.controls button:active { transform: translateY(1px); }
+
+main { padding: 1rem; }
+.hint { margin-bottom: .75rem; color: var(--muted); }
+
+/* Table */
+.table-wrap { background: var(--bg-elev); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+
+table { width: 100%; border-collapse: collapse; background: transparent; }
+th, td { padding: .6rem .7rem; border-bottom: 1px solid var(--border); color: var(--text); }
+
+th { position: sticky; top: 72px; background: linear-gradient(180deg, rgba(19,24,32,.95), rgba(19,24,32,.9)); z-index: 2; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; font-size: .78rem; color: var(--muted); }
+
+tbody tr:hover { background: var(--hover); }
+
+td:first-child, th:first-child { width: 72px; text-align: center; }
+
+/* Title link aesthetics */
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-strong); text-decoration: underline; }
+
+/* Badges / chips */
+.badge { display: inline-block; padding: .12rem .45rem; border-radius: 999px; border: 1px solid var(--border); font-size: .74rem; color: var(--text); background: rgba(217,165,91,.08); }
+
+/* Dim text */
+.dim { color: var(--muted); font-size: .92em; }
+
+/* Inputs inside cells (e.g., Notes) */
+.notes-input, #grid td input[type="text"], #grid td textarea {
+  width: 100%; min-height: 64px; font-size: 14px; padding: 6px 8px; box-sizing: border-box;
+  background: var(--bg-elev); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.notes-input:focus, #grid td input[type="text"]:focus, #grid td textarea:focus {
+  outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(42,58,71,.35);
+}
+
+/* Fancy checkbox styling (harmonize with theme) */
+input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 18px; height: 18px; border: 2px solid #6a7785; border-radius: 4px;
+  display: inline-block; position: relative; cursor: pointer; background: var(--bg-elev);
+  transition: background .2s, border-color .2s, box-shadow .2s;
+}
+input[type="checkbox"]:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(217,165,91,.15); }
+input[type="checkbox"]:checked {
+  background: linear-gradient(180deg, #e0b267, #bf8b3e);
+  border-color: #bf8b3e;
+  box-shadow: 0 0 8px 2px rgba(233,184,110,0.45);
+}
+input[type="checkbox"]:checked::after {
+  content: "✓"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%);
+  font-size: 13px; color: #1a1208; font-weight: 700;
+}
+
+/* Image sizing for the grid (actual <img> styles are inline/overridden) */
+#grid td img {
+  width: 40px; height: 40px; max-width: 100%; object-fit: cover; border-radius: 6px; border: 1px solid var(--border);
+}
+#grid td:nth-child(2) { width: 50px; max-width: 50px; }
+#grid td.title-col { width: 400px; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#grid th { text-align: left; }
+#grid td, #grid th { vertical-align: middle; }
